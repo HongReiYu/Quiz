@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>隨堂小測驗</title>
+  <style>
+    /* 全局設定：乾淨明亮的背景與字體 */
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #E3F2FD; /* 淺藍色背景 */
+      color: #333;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+
+    /* 測驗卡片主體 */
+    .quiz-container {
+      background-color: #FFFFFF;
+      padding: 30px 40px;
+      border-radius: 15px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 450px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #1976D2;
+      font-size: 24px;
+      margin-bottom: 25px;
+    }
+
+    /* 姓名輸入框區域 */
+    .input-group {
+      margin-bottom: 20px;
+    }
+    .input-group label {
+      font-weight: bold;
+      display: block;
+      margin-bottom: 8px;
+    }
+    .input-group input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      border: 2px solid #BBDEFB;
+      border-radius: 8px;
+      font-size: 16px;
+      box-sizing: border-box;
+      transition: border-color 0.3s;
+    }
+    .input-group input[type="text"]:focus {
+      border-color: #1976D2;
+      outline: none;
+    }
+
+    /* 題目區域 */
+    .question-block {
+      margin-bottom: 20px;
+      padding: 15px;
+      background-color: #F5F5F5;
+      border-radius: 8px;
+    }
+    .question-title {
+      font-weight: bold;
+      margin-bottom: 10px;
+      font-size: 16px;
+    }
+    .options label {
+      display: block;
+      margin-bottom: 8px;
+      cursor: pointer;
+    }
+    .options input[type="radio"] {
+      margin-right: 8px;
+      transform: scale(1.2);
+    }
+
+    /* 按鈕設計 */
+    .submit-btn {
+      width: 100%;
+      padding: 12px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      margin-top: 10px;
+    }
+    .submit-btn:hover {
+      background-color: #388E3C;
+    }
+    .submit-btn:disabled {
+      background-color: #9E9E9E;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="quiz-container">
+    <h1>📝 自然與地理小測驗</h1>
+    
+    <div class="input-group">
+      <label for="studentName">學生姓名：</label>
+      <input type="text" id="studentName" placeholder="請輸入你的姓名">
+    </div>
+
+    <div class="question-block">
+      <div class="question-title">1. 蘋果從樹上掉下來，主要是受到什麼力的影響？</div>
+      <div class="options">
+        <label><input type="radio" name="q1" value="0"> 磁力</label>
+        <label><input type="radio" name="q1" value="50"> 地心引力</label>
+        <label><input type="radio" name="q1" value="0"> 摩擦力</label>
+      </div>
+    </div>
+
+    <div class="question-block">
+      <div class="question-title">2. 地球上最大的海洋是哪一個？</div>
+      <div class="options">
+        <label><input type="radio" name="q2" value="0"> 大西洋</label>
+        <label><input type="radio" name="q2" value="50"> 太平洋</label>
+        <label><input type="radio" name="q2" value="0"> 印度洋</label>
+      </div>
+    </div>
+
+    <button class="submit-btn" id="submitBtn" onclick="submitQuiz()">送出並看成績</button>
+  </div>
+
+  <script>
+    // ！！！請將這裡換成你剛剛在 GAS 部署好的 Web App 網址！！！
+    const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxwDKev8rrHJuvyvZlh4VjzLCIu0mmuRnF_4i8nOrLcTqQJLfWttrdr9MoMFWi3V74z_A/exec';
+
+    function submitQuiz() {
+      const nameInput = document.getElementById('studentName').value.trim();
+      const q1Answer = document.querySelector('input[name="q1"]:checked');
+      const q2Answer = document.querySelector('input[name="q2"]:checked');
+      const submitBtn = document.getElementById('submitBtn');
+
+      // 1. 檢查是否填寫完整
+      if (!nameInput) {
+        alert('請輸入學生姓名喔！');
+        return;
+      }
+      if (!q1Answer || !q2Answer) {
+        alert('請確認兩題都已經作答！');
+        return;
+      }
+
+      // 2. 計算分數
+      const score = parseInt(q1Answer.value) + parseInt(q2Answer.value);
+      
+      // 先讓按鈕反白，避免重複點擊
+      submitBtn.disabled = true;
+      submitBtn.innerText = '成績傳送中...';
+
+      // 3. 組合要送到 Google 試算表的資料
+      const payload = {
+        name: nameInput,
+        score: score
+      };
+
+      // 4. 發送 POST 請求到 GAS (使用 text/plain 避開 CORS 預檢)
+      fetch(GAS_WEB_APP_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'text/plain'
+        },
+        body: JSON.stringify(payload)
+      })
+      .then(response => response.json())
+      .then(data => {
+        if(data.status === 'success') {
+          alert(`測驗完成！\n姓名：${nameInput}\n分數：${score} 分\n\n成績已成功紀錄到老師的試算表囉！`);
+          // 可選擇是否清空表單讓下一位填寫
+          // window.location.reload(); 
+        } else {
+          alert('紀錄失敗，請聯絡老師。');
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('網路連線發生錯誤，請稍後再試。');
+      })
+      .finally(() => {
+        // 恢復按鈕狀態
+        submitBtn.disabled = false;
+        submitBtn.innerText = '送出並看成績';
+      });
+    }
+  </script>
+
+</body>
+</html>
